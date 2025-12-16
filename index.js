@@ -69,6 +69,13 @@ app.use('*', (req, res) => {
   });
 });
 
+app.get('/', (req, res) => {
+    res.json({
+        message: "API Online!",
+        version: "1.0.0"
+    });
+});
+
 // A Vercel precisa desta exportação
 module.exports = app;
 
