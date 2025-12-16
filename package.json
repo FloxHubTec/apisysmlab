@@ -1,0 +1,31 @@
+{
+  "name": "caern-sysmlab-api",
+  "version": "1.0.0",
+  "description": "API Node.js para o sistema de monitoramento de análise ambiental CAERN/SYSmLab.",
+  "main": "index.js",
+  "scripts": {
+    "start": "NODE_ENV=production node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "supabase",
+    "postgres"
+  ],
+  "author": "Davi de Barros",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.86.2",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
