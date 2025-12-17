@@ -2,6 +2,8 @@
 const supabase = require("../config/supabase");
 
 module.exports = async function authMiddleware(req, res, next) {
+  console.log("HEADER RECEBIDO:", req.headers.authorization);
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

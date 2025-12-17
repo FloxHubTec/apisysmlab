@@ -29,7 +29,12 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 
 // ================================
 // ROTAS PROTEGIDAS PELO SUPABASE
@@ -66,6 +71,7 @@ app.get('/', (req, res) => {
     });
 });
 
+
 // 404
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -74,8 +80,6 @@ app.use('*', (req, res) => {
     path: req.originalUrl
   });
 });
-
-
 
 // A Vercel precisa desta exportação
 module.exports = app;
