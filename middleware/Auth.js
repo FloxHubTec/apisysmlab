@@ -1,5 +1,5 @@
 // middlewares/authMiddleware.js
-const supabase = require("../config/supabase");
+const supabase = require("../config/supabaseAdmin");
 
 module.exports = async function authMiddleware(req, res, next) {
   console.log("HEADER RECEBIDO:", req.headers.authorization);
