@@ -35,6 +35,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+app.use("/api/debug", require("./routes/debug"));
 
 // ================================
 // ROTAS PROTEGIDAS PELO SUPABASE
