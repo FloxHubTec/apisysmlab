@@ -3,6 +3,7 @@ const supabase = require("../config/supabaseAdmin");
 
 module.exports = async function authMiddleware(req, res, next) {
   console.log("HEADER RECEBIDO:", req.headers.authorization);
+  
 
   const authHeader = req.headers.authorization;
 
@@ -11,6 +12,8 @@ module.exports = async function authMiddleware(req, res, next) {
   }
 
   const token = authHeader.replace("Bearer ", "");
+
+  console.log("TOKEN RECEBIDO NO BACKEND:", token);
 
   const { data, error } = await supabase.auth.getUser(token);
 
