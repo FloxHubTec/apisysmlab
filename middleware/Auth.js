@@ -21,7 +21,7 @@ module.exports = async function authMiddleware(req, res, next) {
     console.error("ERRO SUPABASE AUTH:", error);
     return res.status(401).json({ 
       error: "Token inválido ou expirado", 
-      details: error 
+      details: error || "Usuário não encontrado (token pode ser inválido ou de outro projeto)"
     });
   }
 
