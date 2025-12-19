@@ -1,62 +1,78 @@
-// config/database.js - VERSÃO DEBUG VERCEL
+// config/database.js - VERSÃO SANITIZADA (TRIM)
 const { Pool } = require('pg');
 
 console.log('🚀 Inicializando database...');
 
-// 1. Pega a string de conexão
+// ==========================================
+// 1. OBTENÇÃO E LIMPEZA DA STRING
+// ==========================================
 let connectionString = process.env.DATABASE_URL;
 
-// LOG DE DEBUG (Sem mostrar a senha real)
-if (!connectionString) {
-  console.error('❌ ERRO CRÍTICO: Variável DATABASE_URL não encontrada!');
-} else {
-  // Mascara a senha para mostrar no log
-  const masked = connectionString.replace(/:[^:@]+@/, ':***@');
-  console.log(`🔌 Tentando conectar em: ${masked}`);
+// SE não tiver DATABASE_URL, tenta montar (fallback)
+if (!connectionString && process.env.DB_HOST) {
+  console.log('⚠️ DATABASE_URL não encontrada, montando via variáveis individuais...');
+  const user = process.env.DB_USER;
+  // Codifica a senha para evitar erro com caracteres especiais
+  const pass = encodeURIComponent(process.env.DB_PASSWORD || '');
+  const host = process.env.DB_HOST;
+  const port = process.env.DB_PORT || 5432;
+  const db = process.env.DB_NAME || 'postgres';
+  
+  connectionString = `postgresql://${user}:${pass}@${host}:${port}/${db}?sslmode=require`;
 }
 
-// 2. Configuração SSL (Obrigatória para Supabase na Vercel)
-const sslConfig = { rejectUnauthorized: false };
+if (!connectionString) {
+  console.error('❌ ERRO CRÍTICO: Nenhuma configuração de banco encontrada!');
+} else {
+  // --- A LIMPEZA CRUCIAL (TRIM) ---
+  // Remove espaços vazios no inicio/fim e quebras de linha (\n)
+  connectionString = connectionString.trim().replace(/(\r\n|\n|\r)/gm, "");
+  
+  // Limpa parâmetros conflitantes de SSL da string para usar o objeto abaixo
+  if (connectionString.includes('sslmode=')) {
+    connectionString = connectionString
+      .replace(/sslmode=require/g, '')
+      .replace(/sslmode=no-verify/g, '')
+      .replace(/\?&/, '?')
+      .replace(/&&/, '&')
+      .replace(/\?$/, '');
+  }
+
+  // Debug seguro
+  const masked = connectionString.replace(/:[^:@]+@/, ':***@');
+  console.log(`🔌 Conectando em: ${masked}`);
+}
+
+// ==========================================
+// 2. CONFIGURAÇÃO SSL
+// ==========================================
+const sslConfig = { 
+  rejectUnauthorized: false 
+};
 
 let pool;
 
 try {
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is undefined');
-  }
+  if (!connectionString) throw new Error('String de conexão vazia');
 
   pool = new Pool({
     connectionString: connectionString,
     ssl: sslConfig,
-    connectionTimeoutMillis: 5000, // Timeout mais curto para falhar logo se travar
-    max: 1 // Serverless precisa de poucas conexões por lambda
+    connectionTimeoutMillis: 5000,
+    max: 2 
   });
 
-  // Teste silencioso de conexão (não bloqueia o deploy, mas loga erro)
+  // Teste de conexão não-bloqueante
   pool.connect().then(client => {
-    console.log('✅ Conexão com o Banco estabelecida com sucesso!');
+    console.log('✅ Banco conectado!');
     client.release();
   }).catch(err => {
-    console.error('🔥 ERRO DE CONEXÃO INICIAL:', err.message);
+    console.error('🔥 Erro ao conectar:', err.code, err.message);
   });
 
 } catch (error) {
-  console.error('💀 FALHA NA CRIAÇÃO DO POOL:', error.message);
-  
-  // Cria um Pool "Morto" que loga o motivo do erro sempre que tentam usar
-  pool = {
-    query: async () => {
-      console.error('🛑 Tentativa de query com banco desconectado.');
-      throw new Error(`Banco não conectado. Motivo original: ${error.message}`);
-    },
-    connect: async () => { throw new Error('Banco desconectado'); }
-  };
+  console.error('💀 Erro ao criar Pool:', error.message);
+  pool = { query: async () => { throw new Error('DB Disconnected'); } };
 }
-
-// Wrapper para logs de Query (Mantém o seu log bonito)
-const originalQuery = pool.query;
-pool.query = function(text, params, callback) {
-  return originalQuery.call(this, text, params, callback);
-};
 
 module.exports = pool;
